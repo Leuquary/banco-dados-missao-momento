@@ -304,18 +304,104 @@ Já a Fernanda Lima, que é casada com o Rodrigo, não possui filhos.
 Ela vai ocupar a posição de desenvolvedora.  
 Por último, a Gerente do departamento será Sumaia Azevedo. 
 Casada, duas filhas (Tainã e Nathalia).
-
 O salário de todos eles será a média salarial dos departamentos de administração e finanças.
 
+```sql
+CREATE OR REPLACE VIEW media_salarial_financas AS
+SELECT AVG(f.salario) as media_salarial
+FROM departamentos d
+INNER JOIN funcionarios f 
+ON f.departamento_id = d.departamento_id
+WHERE departamento_nome = "Finanças";
+
+CREATE OR REPLACE VIEW media_salarial_admnistracao AS
+SELECT AVG(f.salario) as media_salarial
+FROM departamentos d
+INNER JOIN funcionarios f 
+ON f.departamento_id = d.departamento_id
+WHERE departamento_nome = "Admnistração";
+
+CREATE OR REPLACE VIEW media_salarial_admnistracao_financas AS
+SELECT (SELECT * FROM media_salarial_admnistracao) + (SELECT * FROM media_salarial_financas) AS media_salarial;
+
+INSERT INTO ocupacoes(ocupacao_id,ocupacao_nome,min_salario,max_salario) 
+VALUES (20,'Gerente de Inovações',6700.00,10000.00);
+
+INSERT INTO funcionarios(funcionario_id,primeiro_nome,sobrenome,email,telefone,data_contratacao,ocupacao_id,salario,gerente_id,departamento_id) 
+VALUES (213,'Sumaia', 'Azevedo','sumaia.azevedo@momento.org','418.501.8492','1985-12-01',20,(SELECT * FROM media_salarial_admnistracao_financas),NULL,12);
+
+INSERT INTO dependentes(dependente_id,primeiro_nome,sobrenome,parentesco,funcionario_id) 
+VALUES (34,'Tainá','Azevedo','Filho(a)',213);
+
+INSERT INTO dependentes(dependente_id,primeiro_nome,sobrenome,parentesco,funcionario_id) 
+VALUES (35,'Nathalia','Azevedo','Filho(a)',213);
+
+INSERT INTO funcionarios(funcionario_id,primeiro_nome,sobrenome,email,telefone,data_contratacao,ocupacao_id,salario,gerente_id,departamento_id) 
+VALUES (211,'William','Ferreira','william.ferreira@momento.org','341.597.3548','2000-08-04',9,(SELECT * FROM media_salarial_admnistracao_financas),213,12);
+
+INSERT INTO dependentes(dependente_id,primeiro_nome,sobrenome,parentesco,funcionario_id) 
+VALUES (36,'Inara','Ferreira','Cônjuge',211);
+
+INSERT INTO dependentes(dependente_id,primeiro_nome,sobrenome,parentesco,funcionario_id) 
+VALUES (37,'Maria Antônia','Ferreira','Filho(a)',211);
+
+INSERT INTO funcionarios(funcionario_id,primeiro_nome,sobrenome,email,telefone,data_contratacao,ocupacao_id,salario,gerente_id,departamento_id) 
+VALUES (212,'Fernanda', 'Lima','fernanda.lima@momento.org','221.629.5892','1997-10-12',9,(SELECT * FROM media_salarial_admnistracao_financas),213,12);
+
+INSERT INTO dependentes(dependente_id,primeiro_nome,sobrenome,parentesco,funcionario_id) 
+VALUES (38,'Rodrigo','Lima','Cônjuge',212);
+```
+
 9. Informe todas as regiões em que a empresa atua acompanhadas de seus países.
+```sql
+SELECT p.pais_nome, r.regiao_nome
+FROM paises p
+INNER JOIN regioes r
+ON p.regiao_id = r.regiao_id;
+```
 
 10. Joe Sciarra é filho de quem?
 ```sql
-SELECT CONCAT(d.primeiro_nome, " ", d.sobrenome) as filho, CONCAT(f.primeiro_nome, " ", f.sobrenome) as pai
+SELECT CONCAT(f.primeiro_nome, " ", f.sobrenome) as pai, CONCAT(d.primeiro_nome, " ", d.sobrenome) as filho
 FROM dependentes d
 INNER JOIN funcionarios f 
 ON d.funcionario_id = f.funcionario_id
-WHERE d.primeiro_nome = "Joe" and d.sobrenome = "Sciarra";
+WHERE d.primeiro_nome = "Joe" and d.sobrenome = "Sciarra" and d.parentesco = "Filho(a)";
 ```
 
 11. Jose Manuel possui filhos?
+```sql
+SELECT CONCAT(d.primeiro_nome, " ", d.sobrenome) as filho, CONCAT(f.primeiro_nome, " ", f.sobrenome) as pai
+FROM funcionarios f
+INNER JOIN dependentes d
+ON f.funcionario_id = d.funcionario_id
+WHERE f.primeiro_nome = "Jose" and f.sobrenome = "Manuel" and d.parentesco = "Filho(a)";
+```
+
+12. Qual região possui mais países?
+```sql
+SELECT r.regiao_nome, COUNT(p.pais_id) AS num_pais
+FROM paises p
+INNER JOIN regioes r
+ON p.regiao_id = r.regiao_id
+GROUP BY r.regiao_nome
+ORDER BY num_pais DESC
+LIMIT 1;
+```
+
+13. Exiba o nome cada funcionário acompanhado de seus dependentes.
+```sql
+SELECT CONCAT(f.primeiro_nome, " ", f.sobrenome) as funcionario, CONCAT(d.primeiro_nome, " ", d.sobrenome) as dependente
+FROM funcionarios f
+INNER JOIN dependentes d
+ON f.funcionario_id = d.funcionario_id;
+```
+
+14. Karen Partners possui um(a) cônjuge?
+```sql
+SELECT CONCAT(f.primeiro_nome, " ", f.sobrenome) as funcionario, CONCAT(d.primeiro_nome, " ", d.sobrenome) as dependente
+FROM funcionarios f
+INNER JOIN dependentes d
+ON f.funcionario_id = d.funcionario_id
+WHERE f.primeiro_nome = "Karen" and f.sobrenome = "Partners" and d.parentesco = "Cônjuge";
+```
